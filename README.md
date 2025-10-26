@@ -13,19 +13,27 @@ This toolkit aims to provide accessible, open-source tools for:
 
 ## 🚀 Current Capabilities
 
-### NDVI Analysis (Available Now)
-Compute vegetation indices from free satellite data (Sentinel-2, Landsat) to monitor crop health and vegetation vigor.
+### Vegetation Index Analysis (Available Now)
+Compute multiple vegetation indices from free satellite data (Sentinel-2, Landsat) to monitor crop health, vegetation vigor, and plant stress.
+
+**Available Indices:**
+- **NDVI** - Normalized Difference Vegetation Index (general vegetation health)
+- **EVI** - Enhanced Vegetation Index (dense vegetation, atmospheric correction)
+- **SAVI** - Soil Adjusted Vegetation Index (sparse vegetation, early season)
+- **NDRE** - Normalized Difference Red Edge (chlorophyll, nitrogen status) *Sentinel-2 only*
+- **GNDVI** - Green NDVI (photosynthetic activity, nitrogen)
 
 **Key Features:**
 - Automatic data retrieval via STAC APIs
 - Support for multiple AOI formats (GeoJSON, bounding boxes, coordinates)
-- Built-in visualizations and statistics
+- Efficient multi-index computation (loads each band once)
+- Built-in side-by-side visualizations and statistics
 - Both CLI and Python library interfaces
-- Interactive Jupyter tutorial for learning
+- Interactive Jupyter tutorials for learning
 
 ## 🔮 Coming Soon
 
-- **Multi-spectral Indices**: EVI, SAVI, NDWI, and more
+- **Additional Indices**: NDWI, NDMI, MSI, and more
 - **Time Series Analysis**: Track changes over growing seasons
 - **Yield Modeling**: Predictive analytics for crop production
 - **Soil Moisture Estimation**: Remote sensing-based soil monitoring
@@ -57,29 +65,57 @@ pip install -e .
 pip install -e ".[dev,notebook]"
 ```
 
-### NDVI Analysis Examples
+### Usage Examples
+
+#### Simple NDVI Analysis
 
 **Command Line:**
 ```bash
-# Analyze a field using a bounding box
+# Quick NDVI computation using a bounding box
 ndvi-compute \
     --aoi "-121.0,37.0,-120.5,37.5" \
     --start-date 2024-06-01 \
     --end-date 2024-06-30
-
-# Or use a GeoJSON file
-ndvi-compute --aoi my_field.geojson --start-date 2024-06-01 --end-date 2024-06-30
 ```
 
 **Python Library:**
 ```python
 from precision_ag.ndvi_from_aoi import compute_ndvi_for_aoi
 
-# Quick NDVI analysis
 results = compute_ndvi_for_aoi(
     aoi_input=[-121.0, 37.0, -120.5, 37.5],
     start_date="2024-06-01",
     end_date="2024-06-30"
+)
+```
+
+#### Multi-Index Vegetation Analysis
+
+**Command Line:**
+```bash
+# Compute multiple vegetation indices at once
+vegetation-index-compute \
+    --aoi my_field.geojson \
+    --start-date 2024-06-01 \
+    --end-date 2024-06-30 \
+    --indices ndvi evi savi ndre gndvi
+
+# List available indices for your satellite collection
+vegetation-index-compute --list-indices
+```
+
+**Python Library:**
+```python
+from precision_ag.vegetation_indices import compute_vegetation_indices_for_aoi
+
+# Compute multiple indices efficiently (loads each band once)
+results = compute_vegetation_indices_for_aoi(
+    aoi_input="field.geojson",
+    start_date="2024-06-01",
+    end_date="2024-06-30",
+    indices=['ndvi', 'evi', 'savi', 'ndre', 'gndvi'],
+    output_dir="my_analysis",
+    visualize=True  # Creates side-by-side comparison plots
 )
 ```
 
@@ -88,24 +124,32 @@ results = compute_ndvi_for_aoi(
 Launch the Jupyter notebooks to learn interactively:
 
 ```bash
+# Tutorial 1: Introduction to NDVI
 jupyter notebook notebooks/NDVI_Tutorial.ipynb
+
+# Tutorial 2: Comprehensive Vegetation Health (coming soon)
+# Multiple indices, comparison, and decision making
 ```
 
-For detailed NDVI usage, see the [NDVI module documentation](precision-ag/ndvi_from_aoi.py) or run `ndvi-compute --help`.
+**Documentation:**
+- [NDVI Module](precision-ag/ndvi_from_aoi.py) - Simple NDVI computation
+- [Vegetation Indices Module](precision-ag/vegetation_indices.py) - Multi-index analysis
+- Run `ndvi-compute --help` or `vegetation-index-compute --help` for CLI options
 
 ## 📁 Project Structure
 
 ```
 precision-ag/
-├── precision-ag/            # Analysis libraries
-│   ├── ndvi_from_aoi.py    # NDVI computation module
-│   └── ...                  # More analysis modules coming soon
-├── notebooks/               # Educational tutorials
-│   ├── NDVI_Tutorial.ipynb # NDVI learning notebook
-│   └── ...                  # More tutorials coming soon
-├── pyproject.toml           # Project configuration
-├── README.md                # This file
-└── output/                  # Generated outputs (auto-created)
+├── precision-ag/                      # Analysis libraries
+│   ├── ndvi_from_aoi.py              # Simple NDVI computation
+│   ├── vegetation_indices.py         # Multi-index analysis (NDVI, EVI, SAVI, NDRE, GNDVI)
+│   └── ...                            # More modules coming soon
+├── notebooks/                         # Educational tutorials
+│   ├── NDVI_Tutorial.ipynb           # Tutorial 1: NDVI basics
+│   └── Vegetation_Health_Tutorial.ipynb  # Tutorial 2: Multi-index analysis (coming soon)
+├── pyproject.toml                     # Project configuration
+├── README.md                          # This file
+└── output/                            # Generated outputs (auto-created)
 ```
 
 ## 🔧 Requirements
