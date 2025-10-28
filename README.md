@@ -13,15 +13,34 @@ This toolkit aims to provide accessible, open-source tools for:
 
 ## 🚀 Current Capabilities
 
-### Vegetation Index Analysis (Available Now)
-Compute multiple vegetation indices from free satellite data (Sentinel-2, Landsat) to monitor crop health, vegetation vigor, and plant stress.
+### Agricultural Index Analysis (Available Now)
+Compute multiple agricultural indices from free satellite data (Sentinel-2, Landsat) to monitor crops, soil, and water resources.
 
-**Available Indices:**
+**🌱 Vegetation Indices:**
 - **NDVI** - Normalized Difference Vegetation Index (general vegetation health)
 - **EVI** - Enhanced Vegetation Index (dense vegetation, atmospheric correction)
 - **SAVI** - Soil Adjusted Vegetation Index (sparse vegetation, early season)
 - **NDRE** - Normalized Difference Red Edge (chlorophyll, nitrogen status) *Sentinel-2 only*
 - **GNDVI** - Green NDVI (photosynthetic activity, nitrogen)
+
+**🏜️ Soil Indices:**
+- **BSI** - Bare Soil Index (soil exposure, texture patterns)
+- **SI** - Soil Index/Brightness Index (soil brightness, texture classification)
+
+**💧 Water/Moisture Indices:**
+- **NDMI** - Normalized Difference Moisture Index (vegetation water content, irrigation management)
+- **NDWI** - Normalized Difference Water Index (water bodies, flood mapping)
+- **MNDWI** - Modified NDWI (enhanced water detection, wetlands)
+
+### Management Zone Analysis (Available Now)
+Create precision agriculture management zones using clustering analysis on satellite indices. Inspired by research from Ali Mirzakhani Nafchi (SDSU Extension) on soil variability and zone-based management.
+
+**Zone Analysis Features:**
+- K-means clustering on multi-index data
+- Automated zone statistics and characterization
+- Georeferenced zone maps (GeoTIFF export)
+- Management recommendations by zone
+- Integration with variable rate application systems
 
 **Key Features:**
 - Automatic data retrieval via STAC APIs
@@ -30,15 +49,15 @@ Compute multiple vegetation indices from free satellite data (Sentinel-2, Landsa
 - Built-in side-by-side visualizations and statistics
 - Both CLI and Python library interfaces
 - Interactive Jupyter tutorials for learning
+- Management zone creation and export
 
 ## 🔮 Coming Soon
 
-- **Additional Indices**: NDWI, NDMI, MSI, and more
 - **Time Series Analysis**: Track changes over growing seasons
 - **Yield Modeling**: Predictive analytics for crop production
-- **Soil Moisture Estimation**: Remote sensing-based soil monitoring
 - **Field Boundary Detection**: Automated field delineation
 - **Crop Classification**: Machine learning-based crop type identification
+- **Integration with Ground Data**: Combine satellite indices with EC mapping, soil samples
 
 ## 🚀 Quick Start
 
@@ -89,33 +108,66 @@ results = compute_ndvi_for_aoi(
 )
 ```
 
-#### Multi-Index Vegetation Analysis
+#### Multi-Index Agricultural Analysis
 
 **Command Line:**
 ```bash
-# Compute multiple vegetation indices at once
-vegetation-index-compute \
+# Compute multiple indices at once (vegetation, soil, water)
+ag-index-compute \
     --aoi my_field.geojson \
     --start-date 2024-06-01 \
     --end-date 2024-06-30 \
-    --indices ndvi evi savi ndre gndvi
+    --indices ndvi evi bsi ndmi ndwi
+
+# Compute soil indices for bare soil period
+ag-index-compute \
+    --aoi my_field.geojson \
+    --start-date 2024-03-15 \
+    --end-date 2024-04-01 \
+    --indices bsi si ndmi
 
 # List available indices for your satellite collection
-vegetation-index-compute --list-indices
+ag-index-compute --list-indices
 ```
 
 **Python Library:**
 ```python
-from precision_ag.vegetation_indices import compute_vegetation_indices_for_aoi
+from precision_ag.additional_indices import compute_agricultural_indices_for_aoi
 
 # Compute multiple indices efficiently (loads each band once)
-results = compute_vegetation_indices_for_aoi(
+results = compute_agricultural_indices_for_aoi(
     aoi_input="field.geojson",
     start_date="2024-06-01",
     end_date="2024-06-30",
-    indices=['ndvi', 'evi', 'savi', 'ndre', 'gndvi'],
+    indices=['ndvi', 'evi', 'bsi', 'ndmi', 'ndwi'],
     output_dir="my_analysis",
     visualize=True  # Creates side-by-side comparison plots
+)
+```
+
+#### Management Zone Creation
+
+**Python Library:**
+```python
+from precision_ag.additional_indices import compute_agricultural_indices_for_aoi
+from precision_ag.zone_analysis import create_management_zones_for_field
+
+# Step 1: Compute indices for bare soil period
+soil_indices = compute_agricultural_indices_for_aoi(
+    aoi_input="field.geojson",
+    start_date="2024-03-15",  # Pre-planting
+    end_date="2024-04-01",
+    indices=['bsi', 'si', 'ndmi'],
+    visualize=False
+)
+
+# Step 2: Create management zones
+zones = create_management_zones_for_field(
+    indices_results=soil_indices[0][1],  # First scene's results
+    n_zones=3,  # Low, Medium, High productivity zones
+    output_dir="management_zones",
+    visualize=True,
+    export=True  # Creates GeoTIFF for use in farm management software
 )
 ```
 
@@ -127,14 +179,18 @@ Launch the Jupyter notebooks to learn interactively:
 # Tutorial 1: Introduction to NDVI
 jupyter notebook notebooks/NDVI_Tutorial.ipynb
 
-# Tutorial 2: Comprehensive Vegetation Health (coming soon)
-# Multiple indices, comparison, and decision making
+# Tutorial 2: Comprehensive Vegetation Health Analysis
+jupyter notebook notebooks/Vegetation_Health_Tutorial.ipynb
+
+# Tutorial 3: Soil & Water Analysis with Management Zones
+jupyter notebook notebooks/Soil_Water_Zones_Tutorial.ipynb
 ```
 
 **Documentation:**
 - [NDVI Module](precision-ag/ndvi_from_aoi.py) - Simple NDVI computation
-- [Vegetation Indices Module](precision-ag/vegetation_indices.py) - Multi-index analysis
-- Run `ndvi-compute --help` or `vegetation-index-compute --help` for CLI options
+- [Agricultural Indices Module](precision-ag/additional_indices.py) - Multi-index analysis (vegetation, soil, water)
+- [Zone Analysis Module](precision-ag/zone_analysis.py) - Management zone creation
+- Run `ndvi-compute --help` or `ag-index-compute --help` for CLI options
 
 ## 📁 Project Structure
 
@@ -142,11 +198,13 @@ jupyter notebook notebooks/NDVI_Tutorial.ipynb
 precision-ag/
 ├── precision-ag/                      # Analysis libraries
 │   ├── ndvi_from_aoi.py              # Simple NDVI computation
-│   ├── vegetation_indices.py         # Multi-index analysis (NDVI, EVI, SAVI, NDRE, GNDVI)
+│   ├── additional_indices.py         # Multi-index analysis (vegetation, soil, water)
+│   ├── zone_analysis.py              # Management zone creation and analysis
 │   └── ...                            # More modules coming soon
 ├── notebooks/                         # Educational tutorials
 │   ├── NDVI_Tutorial.ipynb           # Tutorial 1: NDVI basics
-│   └── Vegetation_Health_Tutorial.ipynb  # Tutorial 2: Multi-index analysis (coming soon)
+│   ├── Vegetation_Health_Tutorial.ipynb  # Tutorial 2: Multi-index analysis
+│   └── Soil_Water_Zones_Tutorial.ipynb  # Tutorial 3: Soil, water, zones
 ├── pyproject.toml                     # Project configuration
 ├── README.md                          # This file
 └── output/                            # Generated outputs (auto-created)
@@ -156,12 +214,14 @@ precision-ag/
 
 - Python >= 3.8
 - numpy >= 1.20.0
+- scipy >= 1.7.0
 - rasterio >= 1.3.0
 - matplotlib >= 3.5.0
 - pystac-client >= 0.7.0
 - planetary-computer >= 1.0.0
 - requests >= 2.28.0
 - shapely >= 2.0.0
+- scikit-learn >= 1.0.0
 
 ## 🌍 Data Sources
 
@@ -180,7 +240,7 @@ This toolkit supports various precision agriculture applications:
 - 💧 **Irrigation Management**: Optimize water usage based on vegetation and soil data
 - 🌱 **Growth Stage Tracking**: Monitor crop development throughout the season
 - 📊 **Yield Forecasting**: Predict harvest outcomes using multi-temporal analysis
-- 🗺️ **Field Mapping**: Delineate management zones for variable rate applications
+- 🗺️ **Field Mapping**: Delineate management zones for variable rate applications (inspired by Nafchi et al. research at SDSU)
 - 🌍 **Sustainability Reporting**: Track environmental metrics and carbon footprint
 - 🔬 **Research & Development**: Support agricultural research with reproducible analysis
 

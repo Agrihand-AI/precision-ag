@@ -37,6 +37,7 @@ dependencies = [
     "planetary-computer>=1.0.0",
     "requests>=2.28.0",
     "shapely>=2.0.0",
+    "scikit-learn>=1.0.0",  # For clustering in zone analysis
 ]
 
 [project.optional-dependencies]
@@ -54,7 +55,9 @@ notebook = [
 
 [project.scripts]
 ndvi-compute = "precision_ag.ndvi_from_aoi:main"
-vegetation-index-compute = "precision_ag.vegetation_indices:main"
+ag-index-compute = "precision_ag.additional_indices:main"
+# Backward compatibility alias
+vegetation-index-compute = "precision_ag.additional_indices:main"
 
 [project.urls]
 Homepage = "https://github.com/chris/precision-ag"
