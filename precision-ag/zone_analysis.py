@@ -389,7 +389,27 @@ class ManagementZoneAnalyzer:
                     ax = axes[idx]
                     index_array = result['indices_data'][idx_name]
                     
-                    im = ax.imshow(index_array, cmap='RdYlGn', vmin=-1, vmax=1)
+                    # Handle different index ranges
+                    if idx_name == 'si':
+                        # Normalize SI to [0, 1] using min-max scaling
+                        valid_data = index_array[~np.isnan(index_array)]
+                        if len(valid_data) > 0:
+                            data_min = valid_data.min()
+                            data_max = valid_data.max()
+                            if data_max > data_min:
+                                display_array = (index_array - data_min) / (data_max - data_min)
+                            else:
+                                display_array = np.zeros_like(index_array)
+                            vmin, vmax = 0, 1
+                        else:
+                            display_array = index_array
+                            vmin, vmax = 0, 1
+                    else:
+                        # Use [-1, 1] for other indices
+                        display_array = index_array
+                        vmin, vmax = -1, 1
+                    
+                    im = ax.imshow(display_array, cmap='RdYlGn', vmin=vmin, vmax=vmax)
                     plt.colorbar(im, ax=ax, shrink=0.8)
                     
                     ax.set_title(f'{idx_name.upper()}', fontsize=12, fontweight='bold')

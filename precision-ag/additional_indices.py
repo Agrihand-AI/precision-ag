@@ -705,6 +705,11 @@ class AgIndexComputer:
         """
         Create side-by-side visualization of multiple indices.
         
+        Automatically handles different index ranges:
+        - Normalized indices (NDVI, EVI, etc.): [-1, 1]
+        - Soil Index (SI): [0, 1] (min-max normalized)
+        - Water/Moisture indices: [-1, 1]
+        
         Args:
             results: Dictionary from compute_indices()
             scene_id: Scene identifier for title
@@ -739,15 +744,38 @@ class AgIndexComputer:
         for idx, (index_name, (index_array, _)) in enumerate(results.items()):
             ax = axes[idx] if n_indices > 1 else axes[0]
             
+            # Determine visualization parameters based on index type
+            info = self.INDICES[index_name]
+            data_range = info.get('range', (-1, 1))
+            
+            # Special handling for SI: normalize to [0, 1]
+            if index_name == 'si':
+                valid_data = index_array[~np.isnan(index_array)]
+                if len(valid_data) > 0:
+                    data_min = valid_data.min()
+                    data_max = valid_data.max()
+                    # Min-max normalization to [0, 1]
+                    if data_max > data_min:
+                        display_array = (index_array - data_min) / (data_max - data_min)
+                    else:
+                        display_array = np.zeros_like(index_array)
+                    vmin, vmax = 0, 1
+                else:
+                    display_array = index_array
+                    vmin, vmax = 0, 1
+            else:
+                # Use original range for other indices
+                display_array = index_array
+                vmin, vmax = data_range if data_range[1] is not None else (-1, 1)
+            
             # Plot
-            im = ax.imshow(index_array, cmap='RdYlGn', vmin=-1, vmax=1)
+            im = ax.imshow(display_array, cmap='RdYlGn', vmin=vmin, vmax=vmax)
             
             # Add colorbar
             cbar = plt.colorbar(im, ax=ax, shrink=0.8)
             cbar.set_label(index_name.upper(), rotation=270, labelpad=15)
             
             # Title and labels
-            info = self.INDICES[index_name]
             ax.set_title(f"{index_name.upper()} - {info['name']}", 
                         fontsize=11, fontweight='bold')
             ax.set_xlabel('Column (pixels)')
